@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">CoBrowser</string>
+
+    <!--Login Screen-->
+    <string name="fragment_login_title">Login</string>
+    <string name="fragment_login_hint">Username</string>
+    <string name="fragment_login_submit">Submit</string>
 </resources>
