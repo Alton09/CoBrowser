@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">CoBrowser</string>
+    <string name="connecting_to_room">Connecting to room.</string>
 
     <!--Login Screen-->
     <string name="fragment_login_title">Login</string>
@@ -14,8 +15,9 @@
 
     <!--ScreenShareFragment-->
     <string name="error_retrieving_access_token">Could not retrieve server access token</string>
-    <string name="fragment_screen_share_title">Connecting to room.</string>
     <string name="fragment_screen_share_button">Start Sharing</string>
     <string name="fragment_screen_share_connected">Connected to room: %1$s.</string>
     <string name="fragment_screen_share_reconnecting">Reconnecting to room: %1$s.</string>
+
+    <!--ScreenViewFragment-->
 </resources>
