@@ -10,4 +10,10 @@
     <string name="fragment_waitingroom_body_text">Hi %1$s, welcome to CoBrowser! What would you like to do?</string>
     <string name="fragment_waitingroom_share_screen">Share Screen</string>
     <string name="fragment_waitingroom_join_screen">Join Screen</string>
+    <string name="dialog_room_name_hint">Room Name</string>
+
+    <!--ScreenShareFragment-->
+    <string name="error_retrieving_access_token">Could not retrieve server access token</string>
+    <string name="fragment_screen_share_title">You are not currently sharing your screen.</string>
+    <string name="fragment_screen_share_button">Start Sharing</string>
 </resources>

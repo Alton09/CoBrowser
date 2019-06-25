@@ -54,19 +54,17 @@ class WaitingRoomFragment : Fragment() {
         if (requestCode == SHARE_SCREEN_REQUEST_CODE) {
             checkPermission(
                 permissionGranted,
-                "Permission to record audio is needed for this feature. Please allow and try again.",
-                ScreenShareFragment()
-            )
+                "Permission to record audio is needed for this feature. Please allow and try again."
+            ) { username, roomName -> (requireActivity() as CoBrowserActivity).showFragment(ScreenShareFragment.newInstance(username, roomName), true)}
         } else if (requestCode == JOIN_ROOM_REQUEST_CODE) {
             checkPermission(
                 permissionGranted,
-                "Permission to record audio and video is needed for this feature. Please allow and try again.",
-                ScreenViewFragment()
-            )
+                "Permission to record audio and video is needed for this feature. Please allow and try again."
+            ) { username, roomName -> (requireActivity() as CoBrowserActivity).showFragment(ScreenViewFragment.newInstance(username, roomName), true)}
         }
     }
 
-    private fun checkPermission(permissionGranted: Boolean, permissionNeededMessage: String, fragment: Fragment) {
+    private fun checkPermission(permissionGranted: Boolean, permissionNeededMessage: String, showFragmentAction: (username: String, roomName: String) ->  Unit) {
         val layoutInflater = requireActivity().layoutInflater
         if (permissionGranted) {
             layoutInflater.inflate(R.layout.dialog_room_name, null).let { dialog ->
@@ -76,7 +74,7 @@ class WaitingRoomFragment : Fragment() {
                     .setPositiveButton("ok") { _, _ ->  }
                     .setNegativeButton("cancel") { _, _ -> }
                     .create()
-                    .validateBeforeDismiss(fragment)
+                    .validateBeforeDismiss(showFragmentAction)
                     .show()
             }
         } else {
@@ -88,26 +86,26 @@ class WaitingRoomFragment : Fragment() {
         }
     }
 
-    private fun AlertDialog.validateBeforeDismiss(fragment: Fragment): AlertDialog {
+    private fun AlertDialog.validateBeforeDismiss(showFragmentAction: (username: String, roomName: String) ->  Unit): AlertDialog {
         setOnShowListener {
             val button = getButton(AlertDialog.BUTTON_POSITIVE)
             button.setOnClickListener {
                 this.dialog_room_input.text?.let {
-                    validateInput(this, fragment)
+                    validateInput(this, showFragmentAction)
                 }
             }
         }
         return this
     }
 
-    private fun validateInput(dialog: AlertDialog, fragment: Fragment) {
+    private fun validateInput(dialog: AlertDialog, showFragmentAction: (username: String, roomName: String) ->  Unit) {
         val input = dialog.dialog_room_input.text.toString()
         dialog.dialog_room_input_layout.apply {
             if (input.isBlank()) {
                 error = "Room name is required"
             } else {
                 error = ""
-                (requireActivity() as CoBrowserActivity).showFragment(fragment, true)
+                showFragmentAction(arguments!!.getString(USERNAME_ARG_KEY)!!, input)
                 dialog.dismiss()
             }
         }

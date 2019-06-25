@@ -16,7 +16,7 @@
 
         <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/dialog_room_input"
-                android:hint="@string/fragment_login_hint"
+                android:hint="@string/dialog_room_name_hint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
     </com.google.android.material.textfield.TextInputLayout>
