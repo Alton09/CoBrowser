@@ -3,8 +3,19 @@
               xmlns:app="http://schemas.android.com/apk/res-auto"
               android:orientation="vertical"
               android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:gravity="center">
+              android:layout_height="match_parent">
+
+    <com.google.android.material.appbar.AppBarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+        <androidx.appcompat.widget.Toolbar
+                android:id="@+id/fragment_screen_share_toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:title="@string/app_name"
+                app:titleTextColor="@android:color/white">
+        </androidx.appcompat.widget.Toolbar>
+    </com.google.android.material.appbar.AppBarLayout>
 
     <TextView
             android:layout_width="match_parent"
@@ -12,6 +23,7 @@
             android:textSize="24sp"
             android:text="@string/fragment_login_title"
             android:gravity="center"
+            android:layout_marginTop="64dp"
             android:layout_marginBottom="16dp"/>
 
     <com.google.android.material.textfield.TextInputLayout

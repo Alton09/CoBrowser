@@ -63,8 +63,8 @@ class WaitingRoomFragment : Fragment() {
             AlertDialog.Builder(requireActivity())
                 .setTitle("Enter Room Name")
                 .setView(layoutInflater.inflate(R.layout.dialog_room_name, null))
-                .setPositiveButton("ok") { _, _ -> }
-                .setNegativeButton("cancel") { _, _ -> (requireActivity() as CoBrowserActivity).showFragment(ScreenShareFragment())}
+                .setPositiveButton("ok") { _, _ -> (requireActivity() as CoBrowserActivity).showFragment(ScreenShareFragment(), true) }
+                .setNegativeButton("cancel") { _, _ -> }
                 .show()
         } else {
             AlertDialog.Builder(requireActivity())

@@ -20,6 +20,11 @@ class CoBrowserActivity : AppCompatActivity() {
         checkLogin()
     }
 
+    override fun onSupportNavigateUp(): Boolean {
+        supportFragmentManager.popBackStack()
+        return true
+    }
+
     private fun checkLogin() {
         val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
         val username: String? = sharedPrefs.getString(USERNAME_KEY, null)
