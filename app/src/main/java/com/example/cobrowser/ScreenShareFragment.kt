@@ -72,7 +72,7 @@ class ScreenShareFragment : Fragment() {
     }
 
     private fun setupFabClickListeners() {
-        fragment_screen_end_call_fab.setOnClickListener {
+        fragment_screen_share_end_call_fab.setOnClickListener {
             // TODO Also disconnect when navigating to the previous screen
             twilioManager.shutDown(true)
         }

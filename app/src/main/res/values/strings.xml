@@ -16,8 +16,9 @@
     <!--ScreenShareFragment-->
     <string name="error_retrieving_access_token">Could not retrieve server access token</string>
     <string name="fragment_screen_share_button">Start Sharing</string>
-    <string name="fragment_screen_share_connected">Connected to room: %1$s.</string>
-    <string name="fragment_screen_share_reconnecting">Reconnecting to room: %1$s.</string>
+    <string name="fragment_screen_share_connected">Connected to room %1$s.</string>
+    <string name="fragment_screen_share_reconnecting">Reconnecting to room %1$s.</string>
 
     <!--ScreenViewFragment-->
+    <string name="fragment_screen_view_connected">Waiting for %2$s to screen share.</string>
 </resources>
