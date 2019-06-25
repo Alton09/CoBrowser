@@ -1,7 +1,6 @@
 package com.example.cobrowser
 
 import android.os.Bundle
-import android.os.PersistableBundle
 import android.preference.PreferenceManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -23,8 +22,8 @@ class CoBrowserActivity : AppCompatActivity() {
 
     private fun checkLogin() {
         val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
-        val language: String? = sharedPrefs.getString(USERNAME_KEY, null)
-        language?.let {
+        val username: String? = sharedPrefs.getString(USERNAME_KEY, null)
+        username?.let {
             showFragment(WaitingRoomFragment.newInstance(it))
         } ?: showFragment(LoginFragment())
     }

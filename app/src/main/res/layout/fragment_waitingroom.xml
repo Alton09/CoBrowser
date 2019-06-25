@@ -1,10 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools"
               android:orientation="vertical"
               android:layout_width="match_parent"
               android:layout_height="match_parent">
+
     <TextView
+            android:id="@+id/fragment_waitingroom_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="WaitingRoom Fragment!"/>
+            android:gravity="center"
+            android:textSize="24sp"
+            android:layout_marginTop="64dp"
+            android:layout_marginBottom="16dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            tools:text="Hi TestUser, welcome to CoBrowser! What would you like to do?"/>
+
+    <com.google.android.material.button.MaterialButton
+            android:id="@+id/fragment_waitingroom_share_button"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:text="@string/fragment_waitingroom_share_screen"
+            android:layout_marginBottom="16dp"
+            android:layout_marginStart="64dp"
+            android:layout_marginEnd="64dp"/>
+
+    <com.google.android.material.button.MaterialButton
+            android:id="@+id/fragment_waitingroom_join_button"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:text="@string/fragment_waitingroom_join_screen"
+            tools:text="Join Screen"
+            android:layout_marginStart="64dp"
+            android:layout_marginEnd="64dp"/>
 </LinearLayout>

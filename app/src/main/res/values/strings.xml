@@ -5,4 +5,9 @@
     <string name="fragment_login_title">Login</string>
     <string name="fragment_login_hint">Username</string>
     <string name="fragment_login_submit">Submit</string>
+
+    <!--Waiting Room Screen-->
+    <string name="fragment_waitingroom_body_text">Hi %1$s, welcome to CoBrowser! What would you like to do?</string>
+    <string name="fragment_waitingroom_share_screen">Share Screen</string>
+    <string name="fragment_waitingroom_join_screen">Join Screen</string>
 </resources>
