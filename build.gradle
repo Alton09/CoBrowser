@@ -15,6 +15,24 @@ buildscript {
     }
 }
 
+ext.getSecretProperty = { key, defaultValue ->
+    def value = System.getenv(key)
+
+    if (value == null) {
+        Properties properties = new Properties()
+        if (project.rootProject.file('local.properties').exists()) {
+            properties.load(project.rootProject.file('local.properties').newDataInputStream())
+            value = properties.getProperty(key)
+        }
+    }
+
+    if (value == null) {
+        value = defaultValue
+    }
+
+    return value
+}
+
 allprojects {
     repositories {
         google()

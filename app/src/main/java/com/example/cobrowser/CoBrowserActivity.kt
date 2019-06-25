@@ -5,7 +5,6 @@ import android.preference.PreferenceManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 
-
 class CoBrowserActivity : AppCompatActivity() {
 
     companion object {

@@ -20,6 +20,11 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    defaultConfig {
+        buildConfigField("String",
+                "TWILIO_ACCESS_TOKEN_SERVER",
+                "\"${getSecretProperty("TWILIO_ACCESS_TOKEN_SERVER", "http://localhost:3000")}\"")
+    }
 }
 
 dependencies {
