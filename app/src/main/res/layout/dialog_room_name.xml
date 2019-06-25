@@ -1,14 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
               android:orientation="vertical"
               android:layout_width="match_parent"
               android:layout_height="match_parent">
 
-    <EditText
+    <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/dialog_room_input_layout"
+            app:errorEnabled="true"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-    android:hint="Blah"/>
+            android:layout_marginEnd="16dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/dialog_room_input"
+                android:hint="@string/fragment_login_hint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+    </com.google.android.material.textfield.TextInputLayout>
 
 </LinearLayout>

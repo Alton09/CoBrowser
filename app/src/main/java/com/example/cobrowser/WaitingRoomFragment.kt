@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
+import kotlinx.android.synthetic.main.dialog_room_name.*
 import kotlinx.android.synthetic.main.fragment_waitingroom.*
 
 class WaitingRoomFragment : Fragment() {
@@ -51,27 +52,64 @@ class WaitingRoomFragment : Fragment() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         val permissionGranted = grantResults.all { it == PackageManager.PERMISSION_GRANTED }
         if (requestCode == SHARE_SCREEN_REQUEST_CODE) {
-            checkPermission(permissionGranted, "Permission to record audio is needed for this feature. Please allow and try again.")
+            checkPermission(
+                permissionGranted,
+                "Permission to record audio is needed for this feature. Please allow and try again.",
+                ScreenShareFragment()
+            )
         } else if (requestCode == JOIN_ROOM_REQUEST_CODE) {
-            checkPermission(permissionGranted, "Permission to record audio and video is needed for this feature. Please allow and try again.")
+            checkPermission(
+                permissionGranted,
+                "Permission to record audio and video is needed for this feature. Please allow and try again.",
+                ScreenViewFragment()
+            )
         }
     }
 
-    private fun checkPermission(permissionGranted: Boolean, permissionNeededMessage: String) {
+    private fun checkPermission(permissionGranted: Boolean, permissionNeededMessage: String, fragment: Fragment) {
         val layoutInflater = requireActivity().layoutInflater
         if (permissionGranted) {
-            AlertDialog.Builder(requireActivity())
-                .setTitle("Enter Room Name")
-                .setView(layoutInflater.inflate(R.layout.dialog_room_name, null))
-                .setPositiveButton("ok") { _, _ -> (requireActivity() as CoBrowserActivity).showFragment(ScreenShareFragment(), true) }
-                .setNegativeButton("cancel") { _, _ -> }
-                .show()
+            layoutInflater.inflate(R.layout.dialog_room_name, null).let { dialog ->
+                AlertDialog.Builder(requireActivity())
+                    .setTitle("Enter Room Name")
+                    .setView(dialog)
+                    .setPositiveButton("ok") { _, _ ->  }
+                    .setNegativeButton("cancel") { _, _ -> }
+                    .create()
+                    .validateBeforeDismiss(fragment)
+                    .show()
+            }
         } else {
             AlertDialog.Builder(requireActivity())
                 .setTitle("Permission Needed")
                 .setMessage(permissionNeededMessage)
                 .setNeutralButton("ok") { _, _ -> }
                 .show()
+        }
+    }
+
+    private fun AlertDialog.validateBeforeDismiss(fragment: Fragment): AlertDialog {
+        setOnShowListener {
+            val button = getButton(AlertDialog.BUTTON_POSITIVE)
+            button.setOnClickListener {
+                this.dialog_room_input.text?.let {
+                    validateInput(this, fragment)
+                }
+            }
+        }
+        return this
+    }
+
+    private fun validateInput(dialog: AlertDialog, fragment: Fragment) {
+        val input = dialog.dialog_room_input.text.toString()
+        dialog.dialog_room_input_layout.apply {
+            if (input.isBlank()) {
+                error = "Room name is required"
+            } else {
+                error = ""
+                (requireActivity() as CoBrowserActivity).showFragment(fragment, true)
+                dialog.dismiss()
+            }
         }
     }
 }
