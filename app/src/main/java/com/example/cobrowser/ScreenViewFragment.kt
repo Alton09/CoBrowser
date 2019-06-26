@@ -9,7 +9,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
-import kotlinx.android.synthetic.main.fragment_screen_share.*
 import kotlinx.android.synthetic.main.fragment_screen_view.*
 import org.koin.android.ext.android.inject
 import timber.log.Timber
@@ -33,17 +32,6 @@ class ScreenViewFragment : Fragment() {
         }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        arguments!!.apply {
-            twilioManager.init(
-                requireActivity() as AppCompatActivity,
-                getString(ScreenShareFragment.USERNAME_ARG_KEY)!!,
-                getString(ScreenShareFragment.ROOM_NAME_ARG_KEY)!!)
-        }
-    }
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_screen_view, container, false)
     }
@@ -51,6 +39,15 @@ class ScreenViewFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (requireContext() as AppCompatActivity).setSupportActionBar(fragment_screen_view_toolbar)
+
+        arguments!!.apply {
+            twilioManager.screenViewInit(
+                requireActivity() as AppCompatActivity,
+                getString(ScreenShareFragment.USERNAME_ARG_KEY)!!,
+                getString(ScreenShareFragment.ROOM_NAME_ARG_KEY)!!,
+                fragment_screen_view_video)
+        }
+
         setupFabClickListeners()
     }
 

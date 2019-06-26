@@ -1,5 +1,9 @@
 package com.example.cobrowser
 
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.media.projection.MediaProjectionManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -21,6 +25,7 @@ class ScreenShareFragment : Fragment() {
     companion object {
         const val USERNAME_ARG_KEY = "USERNAME_ARG_KEY"
         const val ROOM_NAME_ARG_KEY = "ROOM_NAME_ARG_KEY"
+        const val MEDIA_PROJECTION_REQUEST = 100
 
         fun newInstance(username: String, roomName: String): ScreenShareFragment {
             val bundle = Bundle().apply {
@@ -33,14 +38,7 @@ class ScreenShareFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        arguments!!.apply {
-            twilioManager.init(
-                requireActivity() as AppCompatActivity,
-                getString(USERNAME_ARG_KEY)!!,
-                getString(ROOM_NAME_ARG_KEY)!!)
-        }
-
+        requestScreenCapturePermission()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -71,36 +69,70 @@ class ScreenShareFragment : Fragment() {
         super.onDestroy()
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == MEDIA_PROJECTION_REQUEST) {
+            if (resultCode == Activity.RESULT_OK) {
+                arguments!!.apply {
+                    twilioManager.screenShareInit(
+                        requireActivity() as AppCompatActivity,
+                        getString(USERNAME_ARG_KEY)!!,
+                        getString(ROOM_NAME_ARG_KEY)!!,
+                        data!!,
+                        resultCode
+                    )
+                }
+            } else {
+                // TODO Present error message
+                requireActivity().supportFragmentManager.popBackStack()
+            }
+        }
+    }
+
     private fun setupFabClickListeners() {
+        fragment_screen_share_cast_fab.setOnClickListener {
+            // TODO toggle screen capture
+        }
         fragment_screen_share_end_call_fab.setOnClickListener {
-            // TODO Also disconnect when navigating to the previous screen
             twilioManager.shutDown(true)
         }
         fragment_screen_share_mic_fab.setOnClickListener {
             val enableMic = twilioManager.muteMic()
-                val icon = if (enableMic)
-                    R.drawable.ic_mic_on
-                else
-                    R.drawable.ic_mic_off
-                fragment_screen_share_mic_fab.setImageDrawable(requireActivity().getDrawable(icon))
-            }
+            val icon = if (enableMic)
+                R.drawable.ic_mic_on
+            else
+                R.drawable.ic_mic_off
+            fragment_screen_share_mic_fab.setImageDrawable(requireActivity().getDrawable(icon))
         }
+    }
+
+    private fun requestScreenCapturePermission() {
+        val mediaProjectionManager =
+            requireActivity().getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+        startActivityForResult(
+            mediaProjectionManager.createScreenCaptureIntent(),
+            MEDIA_PROJECTION_REQUEST
+        )
+    }
 
     private fun subscribeToRoomEvents(): Disposable {
         return twilioManager
             .roomEventObserver
             .subscribe({
-                when(it) {
+                when (it) {
                     is RoomEvent.ConnectedEvent -> {
                         fragment_screen_share_progress.visibility = View.GONE
-                        fragment_screen_share_title.text = getString(R.string.fragment_screen_share_connected, it.room.name)
+                        fragment_screen_share_title.text =
+                            getString(R.string.fragment_screen_share_connected, it.room.name)
                     }
                     is RoomEvent.ReconnectedEvent -> {
-                        fragment_screen_share_title.text = getString(R.string.fragment_screen_share_connected, it.room.name)
+                        fragment_screen_share_title.text =
+                            getString(R.string.fragment_screen_share_connected, it.room.name)
                         fragment_screen_share_progress.visibility = View.GONE
                     }
                     is RoomEvent.ReconnectingEvent -> {
-                        fragment_screen_share_title.text = getString(R.string.fragment_screen_share_reconnecting, it.room.name)
+                        fragment_screen_share_title.text =
+                            getString(R.string.fragment_screen_share_reconnecting, it.room.name)
                         fragment_screen_share_progress.visibility = View.VISIBLE
                     }
                 }

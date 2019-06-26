@@ -1,6 +1,7 @@
 package com.example.cobrowser
 
 import android.content.Context
+import android.content.Intent
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
@@ -15,12 +16,15 @@ import timber.log.Timber
 
 class TwilioManager {
 
+    private val roomEvents = BehaviorSubject.create<RoomEvent>()
+    val roomEventObserver = roomEvents.hide()
     private lateinit var activity: AppCompatActivity
     private lateinit var username: String
     private lateinit var roomName: String
     private lateinit var accessToken: String
     private var localAudioTrack: LocalAudioTrack? = null
     private var localVideoTrack: LocalVideoTrack? = null
+    private var participantVideoTrack: VideoTrack? = null
     private val sharedPreferences by lazy {
         PreferenceManager.getDefaultSharedPreferences(activity)
     }
@@ -63,11 +67,11 @@ class TwilioManager {
                 else -> Vp8Codec()
             }
         }
+
     private val enableAutomaticSubscription: Boolean
         get() {
             return sharedPreferences.getBoolean("enable_automatic_subscription", true)
         }
-
     private val encodingParameters: EncodingParameters
         get() {
             val maxAudioBitrate = Integer.parseInt(
@@ -90,19 +94,99 @@ class TwilioManager {
     private var previousMicrophoneMute = false
     private var localParticipant: LocalParticipant? = null
     private var participantIdentity: String? = null
-    private val roomEvents = BehaviorSubject.create<RoomEvent>()
-    val roomEventObserver = roomEvents.hide()
+    private var screenVideoTrack: LocalVideoTrack? = null
+    private var screenCapturer: ScreenCapturer? = null
+    private var videoview: VideoView? = null
+    private val roomListener = object : Room.Listener {
+        override fun onConnected(room: Room) {
+            Timber.i("onConnected")
+            roomEvents.onNext(RoomEvent.ConnectedEvent(room))
+            localParticipant = room.localParticipant
+
+            // Only one participant is supported
+            room.remoteParticipants.firstOrNull()?.let { addRemoteParticipant(it) }
+        }
+
+        override fun onReconnected(room: Room) {
+            Timber.i("onReconnected")
+            roomEvents.onNext(RoomEvent.ReconnectedEvent(room))
+        }
+
+        override fun onReconnecting(room: Room, e: TwilioException) {
+            Timber.e(e, "onReconnecting")
+            roomEvents.onNext(RoomEvent.ReconnectingEvent(room))
+        }
+
+        override fun onConnectFailure(room: Room, e: TwilioException) {
+            Timber.e(e, "onConnectionFailure")
+            configureAudio(false)
+            Toast.makeText(activity, "Failed to connect to room: ${room.name}", Toast.LENGTH_LONG).show()
+            shutDown(true)
+        }
+
+        override fun onDisconnected(room: Room, e: TwilioException?) {
+            Timber.e(e, "onDisconnected")
+            // TODO needed for ScreenShareFragment
+//            moveLocalVideoToPrimaryView()
+            configureAudio(false)
+            shutDown(true)
+        }
+
+        override fun onParticipantConnected(room: Room, participant: RemoteParticipant) {
+            Timber.i("onParticipantConnected")
+            addRemoteParticipant(participant)
+        }
+
+        override fun onParticipantDisconnected(room: Room, participant: RemoteParticipant) {
+            Timber.i("onParticipantDisconnected")
+            removeRemoteParticipant(participant)
+        }
+
+        override fun onRecordingStarted(room: Room) {
+            /*
+             * Indicates when media shared to a Room is being recorded. Note that
+             * recording is only available in our Group Rooms developer preview.
+             */
+            Timber.i("onRecordingStarted")
+        }
+
+        override fun onRecordingStopped(room: Room) {
+            /*
+             * Indicates when media shared to a Room is no longer being recorded. Note that
+             * recording is only available in our Group Rooms developer preview.
+             */
+            Timber.i("onRecordingStopped")
+        }
+    }
+    private val screenCaptureListener = object : ScreenCapturer.Listener {
+        override fun onFirstFrameAvailable() {
+            Timber.d("onFirstFrameAvailable")
+        }
+
+        override fun onScreenCaptureError(errorDescription: String) {
+            Timber.d("onScreenCaptureError - error description = $errorDescription")
+        }
+
+    }
+
+    fun screenShareInit(activity: AppCompatActivity, username: String, roomName: String, mediaProjectionIntent: Intent, mediaProjectionResultCode: Int) {
+        this.activity = activity
+        screenCapturer = ScreenCapturer(activity, mediaProjectionResultCode, mediaProjectionIntent, screenCaptureListener)
+        startScreenCapture()
+        init(activity, username, roomName)
+    }
+
+    fun screenViewInit(activity: AppCompatActivity, username: String, roomName: String, videoView: VideoView) {
+        this.videoview = videoView
+        init(activity, username, roomName)
+    }
 
     fun init(activity: AppCompatActivity, username: String, roomName: String) {
         this.activity = activity
         this.username = username
         this.roomName = roomName
         localAudioTrack = LocalAudioTrack.create(activity, true)
-        // TODO needed for ScreenShareFragment
-//        localVideoTrack = LocalVideoTrack.create(this,
-//            true,
-//            cameraCapturerCompat.videoCapturer)
-//        localVideoView = primaryVideoView
+
         activity.volumeControlStream = AudioManager.STREAM_VOICE_CALL
         audioManager.isSpeakerphoneOn = true
 
@@ -118,7 +202,19 @@ class TwilioManager {
         return enable
     }
 
+    fun startScreenCapture() {
+        screenVideoTrack = LocalVideoTrack.create(activity, true, screenCapturer!!)
+    }
+
+    fun stopScreenCapture() {
+        screenVideoTrack?.apply{
+            release()
+            screenVideoTrack = null
+        }
+    }
+
     fun shutDown(popFragment: Boolean = false) {
+        stopScreenCapture()
         room?.disconnect()
         localAudioTrack?.release()
         localVideoTrack?.release()
@@ -176,89 +272,13 @@ class TwilioManager {
         }
     }
 
-    private val roomListener = object : Room.Listener {
-        override fun onConnected(room: Room) {
-            Timber.i("onConnected")
-            roomEvents.onNext(RoomEvent.ConnectedEvent(room))
-            localParticipant = room.localParticipant
-
-//            // Only one participant is supported
-            room.remoteParticipants.firstOrNull()?.let { addRemoteParticipant(it) }
-        }
-
-        override fun onReconnected(room: Room) {
-            Timber.i("onReconnected")
-            roomEvents.onNext(RoomEvent.ReconnectedEvent(room))
-        }
-
-        override fun onReconnecting(room: Room, e: TwilioException) {
-            Timber.e(e, "onReconnecting")
-            roomEvents.onNext(RoomEvent.ReconnectingEvent(room))
-        }
-
-        override fun onConnectFailure(room: Room, e: TwilioException) {
-            Timber.e(e, "onConnectionFailure")
-            configureAudio(false)
-            Toast.makeText(activity, "Failed to connect to room: ${room.name}", Toast.LENGTH_LONG).show()
-            shutDown(true)
-        }
-
-        override fun onDisconnected(room: Room, e: TwilioException?) {
-            Timber.e(e, "onDisconnected")
-            // TODO needed for ScreenShareFragment
-//            moveLocalVideoToPrimaryView()
-            configureAudio(false)
-            shutDown(true)
-        }
-
-        override fun onParticipantConnected(room: Room, participant: RemoteParticipant) {
-            Timber.i("onParticipantConnected")
-            addRemoteParticipant(participant)
-        }
-
-        override fun onParticipantDisconnected(room: Room, participant: RemoteParticipant) {
-            Timber.i("onParticipantDisconnected")
-            removeRemoteParticipant(participant)
-        }
-
-        override fun onRecordingStarted(room: Room) {
-            /*
-             * Indicates when media shared to a Room is being recorded. Note that
-             * recording is only available in our Group Rooms developer preview.
-             */
-            Timber.i("onRecordingStarted")
-        }
-
-        override fun onRecordingStopped(room: Room) {
-            /*
-             * Indicates when media shared to a Room is no longer being recorded. Note that
-             * recording is only available in our Group Rooms developer preview.
-             */
-            Timber.i("onRecordingStopped")
-        }
-    }
-
     private fun addRemoteParticipant(remoteParticipant: RemoteParticipant) {
-        /*
-         * This app only displays video for one additional participant per Room
-         */
         participantIdentity = remoteParticipant.identity
         Toast.makeText(activity, "Participant $participantIdentity joined", Toast.LENGTH_LONG).show()
 
-        /*
-         * Add participant renderer
-         */
-        // TODO May be needed for ScreenViewFragment
-//        remoteParticipant.remoteVideoTracks.firstOrNull()?.let { remoteVideoTrackPublication ->
-//            if (remoteVideoTrackPublication.isTrackSubscribed) {
-//                remoteVideoTrackPublication.remoteVideoTrack?.let { addRemoteParticipantVideo(it) }
-//            }
-//        }
-
-        /*
-         * Start listening for participant events
-         */
-//        remoteParticipant.setListener(participantListener)
+        videoview?.let {
+            remoteParticipant.remoteVideoTracks.firstOrNull()?.remoteVideoTrack?.addRenderer(it)
+        }
     }
 
     private fun removeRemoteParticipant(remoteParticipant: RemoteParticipant) {
@@ -267,16 +287,9 @@ class TwilioManager {
             return
         }
 
-        // TODO needed for ScreenShareFragment
-        /*
-         * Remove participant renderer
-         */
-//        remoteParticipant.remoteVideoTracks.firstOrNull()?.let { remoteVideoTrackPublication ->
-//            if (remoteVideoTrackPublication.isTrackSubscribed) {
-//                remoteVideoTrackPublication.remoteVideoTrack?.let { removeParticipantVideo(it) }
-//            }
-//        }
-//        moveLocalVideoToPrimaryView()
+        videoview?.let {
+            remoteParticipant.remoteVideoTracks.firstOrNull()?.remoteVideoTrack?.removeRenderer(it)
+        }
     }
 
     // TODO Replace Ion with Retrofit and move to a network layer class

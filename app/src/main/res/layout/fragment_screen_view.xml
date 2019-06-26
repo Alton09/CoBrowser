@@ -50,7 +50,7 @@
             app:layout_constraintBottom_toBottomOf="parent">
 
         <com.twilio.video.VideoView
-                android:id="@+id/thumbnailVideoView"
+                android:id="@+id/fragment_screen_view_video"
                 app:overlaySurface="true"
                 app:mirror="true"
                 android:layout_width="0dp"
