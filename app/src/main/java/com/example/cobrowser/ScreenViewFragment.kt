@@ -38,8 +38,8 @@ class ScreenViewFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_screen_view, container, false)
         view.setOnTouchListener { view, event ->
             if(event.action == MotionEvent.ACTION_DOWN) {
-                Timber.d("Press event! x = ${event.rawX} y = ${event.rawY}")
-                twilioManager.sendScreenPosition(MotionMessage(true, event.rawX, event.rawY))
+                Timber.d("Press event! x = ${event.x} y = ${event.y}")
+                twilioManager.sendScreenPosition(MotionMessage(true, event.x, event.y))
             }
             true
         }
@@ -96,7 +96,7 @@ class ScreenViewFragment : Fragment() {
 
     private fun subscribeToRoomEvents(): Disposable {
         return twilioManager
-            .roomEventObserver
+            .roomEventsObserver
             .subscribe({
                 when(it) {
                     is RoomEvent.ConnectedEvent -> {

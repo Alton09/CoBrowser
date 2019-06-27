@@ -20,7 +20,8 @@ class ScreenShareFragment : Fragment() {
 
     // TODO Create ViewModel to manage view state and TwilioManager
     val twilioManager by inject<TwilioManager>()
-    private val disposables: CompositeDisposable = CompositeDisposable()
+    private var roomEventDisposable: Disposable? = null
+    private var dataTrackDisposable: Disposable? = null
 
     companion object {
         const val USERNAME_ARG_KEY = "USERNAME_ARG_KEY"
@@ -55,18 +56,18 @@ class ScreenShareFragment : Fragment() {
     override fun onResume() {
         super.onResume()
 
-        disposables.addAll(
-            subscribeToRoomEvents()
-        )
+        roomEventDisposable = subscribeToRoomEvents()
+        dataTrackDisposable = subscribeToDataTrackEvents()
     }
 
     override fun onPause() {
         super.onPause()
-        disposables.clear()
+        roomEventDisposable?.dispose()
     }
 
     override fun onDestroy() {
         twilioManager.shutDown()
+        dataTrackDisposable?.dispose()
         super.onDestroy()
     }
 
@@ -117,9 +118,9 @@ class ScreenShareFragment : Fragment() {
         )
     }
 
-    private fun subscribeToRoomEvents(): Disposable {
-        return twilioManager
-            .roomEventObserver
+    private fun subscribeToRoomEvents(): Disposable =
+        twilioManager
+            .roomEventsObserver
             .subscribe({
                 when (it) {
                     is RoomEvent.ConnectedEvent -> {
@@ -141,6 +142,11 @@ class ScreenShareFragment : Fragment() {
             }, {
                 Timber.e(it)
             })
-    }
 
+    private fun subscribeToDataTrackEvents(): Disposable =
+        twilioManager
+            .dataTrackEventsObserver
+            .subscribe {
+                (requireActivity() as OverlayView).displayTouchEvent(it)
+            }
 }

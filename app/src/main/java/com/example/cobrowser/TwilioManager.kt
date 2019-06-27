@@ -14,11 +14,14 @@ import com.twilio.video.*
 import io.reactivex.subjects.BehaviorSubject
 import timber.log.Timber
 import java.nio.ByteBuffer
+import android.util.Pair
 
 class TwilioManager {
 
     private val roomEvents = BehaviorSubject.create<RoomEvent>()
-    val roomEventObserver = roomEvents.hide()
+    val roomEventsObserver = roomEvents.hide()
+    private val dataTrackEvents = BehaviorSubject.create<Pair<Float, Float>>()
+    val dataTrackEventsObserver = dataTrackEvents.hide()
     private lateinit var activity: AppCompatActivity
     private lateinit var username: String
     private lateinit var roomName: String
@@ -298,7 +301,8 @@ class TwilioManager {
 
         override fun onMessage(remoteDataTrack: RemoteDataTrack, message: String) {
             MotionMessage.fromJson(message)?.let {
-                Toast.makeText(activity, "Received tocuh event x = ${it.coordinates.first} y = ${it.coordinates.second}}", Toast.LENGTH_LONG).show()
+                Timber.d("Received touch event x = ${it.coordinates.first} y = ${it.coordinates.second}}")
+                dataTrackEvents.onNext(it.coordinates)
             }
         }
 
