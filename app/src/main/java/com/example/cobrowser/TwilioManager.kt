@@ -15,12 +15,13 @@ import io.reactivex.subjects.BehaviorSubject
 import timber.log.Timber
 import java.nio.ByteBuffer
 import android.util.Pair
+import io.reactivex.subjects.PublishSubject
 
 class TwilioManager {
 
     private val roomEvents = BehaviorSubject.create<RoomEvent>()
     val roomEventsObserver = roomEvents.hide()
-    private val dataTrackEvents = BehaviorSubject.create<Pair<Float, Float>>()
+    private val dataTrackEvents = PublishSubject.create<Pair<Float, Float>>()
     val dataTrackEventsObserver = dataTrackEvents.hide()
     private lateinit var activity: AppCompatActivity
     private lateinit var username: String

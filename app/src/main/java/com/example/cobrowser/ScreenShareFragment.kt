@@ -51,13 +51,13 @@ class ScreenShareFragment : Fragment() {
         (requireActivity() as AppCompatActivity).setSupportActionBar(fragment_screen_share_toolbar)
         (requireActivity() as OverlayView).displayOverlayView()
         setupFabClickListeners()
+        dataTrackDisposable = subscribeToDataTrackEvents()
     }
 
     override fun onResume() {
         super.onResume()
 
         roomEventDisposable = subscribeToRoomEvents()
-        dataTrackDisposable = subscribeToDataTrackEvents()
     }
 
     override fun onPause() {

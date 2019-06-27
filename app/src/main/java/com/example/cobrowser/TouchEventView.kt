@@ -53,8 +53,13 @@ internal class TouchEventView(context: Context) : SurfaceView(context) {
                 canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
                 canvas.drawCircle(coordinates.first, coordinates.second, 50f, paint)
                 holder.unlockCanvasAndPost(canvas)
+
+                holder.lockCanvas()
+                Thread.sleep(250)
+                canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+                holder.unlockCanvasAndPost(canvas)
         }
-        return false
+        return true
     }
 
 }
