@@ -1,11 +1,22 @@
 package com.example.cobrowser
 
+import android.content.Context
+import android.graphics.PixelFormat
 import android.os.Bundle
 import android.preference.PreferenceManager
+import android.view.View
+import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 
-class CoBrowserActivity : AppCompatActivity() {
+// TODO Service would be better to handle overlay view
+interface OverlayView {
+    fun displayOverlayView()
+    fun removeOverlayView()
+}
+
+class CoBrowserActivity : AppCompatActivity(), OverlayView {
+    private var overlayView: View? = null
 
     companion object {
         const val USERNAME_KEY = "USERNAME_ARG_KEY"
@@ -23,6 +34,37 @@ class CoBrowserActivity : AppCompatActivity() {
         supportFragmentManager.popBackStack()
         return true
     }
+
+    override fun onDestroy() {
+        windowManager().removeView(overlayView)
+        super.onDestroy()
+    }
+
+    override fun displayOverlayView() {
+        overlayView = View(this)
+        val params = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.MATCH_PARENT,
+            getLayoutType(),
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+            PixelFormat.TRANSLUCENT
+        )
+        params.title = "OVERLAY WINDOW!"
+        windowManager().addView(overlayView, params)
+    }
+
+    private fun getLayoutType() =
+        if(android.os.Build.VERSION.SDK_INT >=  android.os.Build.VERSION_CODES.O) {
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+        } else {
+            WindowManager.LayoutParams.TYPE_PHONE
+        }
+
+    override fun removeOverlayView() {
+        windowManager().removeView(overlayView)
+    }
+
+    private fun windowManager() = getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
     private fun checkLogin() {
         val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)

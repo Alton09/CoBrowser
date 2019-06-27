@@ -4,14 +4,12 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.dialog_room_name.*
 import kotlinx.android.synthetic.main.fragment_waitingroom.*
-import timber.log.Timber
 
 class WaitingRoomFragment : Fragment() {
 

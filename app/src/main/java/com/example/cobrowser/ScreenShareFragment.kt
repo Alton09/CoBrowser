@@ -48,6 +48,7 @@ class ScreenShareFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (requireActivity() as AppCompatActivity).setSupportActionBar(fragment_screen_share_toolbar)
+        (requireActivity() as OverlayView).displayOverlayView()
         setupFabClickListeners()
     }
 
@@ -95,6 +96,7 @@ class ScreenShareFragment : Fragment() {
         }
         fragment_screen_share_end_call_fab.setOnClickListener {
             twilioManager.shutDown(true)
+            (requireActivity() as OverlayView).removeOverlayView()
         }
         fragment_screen_share_mic_fab.setOnClickListener {
             val enableMic = twilioManager.muteMic()

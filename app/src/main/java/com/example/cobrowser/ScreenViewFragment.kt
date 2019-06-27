@@ -14,6 +14,7 @@ import kotlinx.android.synthetic.main.fragment_screen_view.*
 import org.koin.android.ext.android.inject
 import timber.log.Timber
 
+
 class ScreenViewFragment : Fragment() {
 
     // TODO Create ViewModel to manage view state and TwilioManager
@@ -55,7 +56,6 @@ class ScreenViewFragment : Fragment() {
                 getString(ScreenShareFragment.ROOM_NAME_ARG_KEY)!!,
                 fragment_screen_view_video)
         }
-
         setupFabClickListeners()
     }
 
