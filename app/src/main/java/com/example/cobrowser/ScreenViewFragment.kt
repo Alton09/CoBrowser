@@ -2,11 +2,13 @@ package com.example.cobrowser
 
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import com.twilio.video.Room
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.fragment_screen_view.*
@@ -38,7 +40,6 @@ class ScreenViewFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        (requireContext() as AppCompatActivity).setSupportActionBar(fragment_screen_view_toolbar)
 
         arguments!!.apply {
             twilioManager.screenViewInit(
@@ -92,17 +93,19 @@ class ScreenViewFragment : Fragment() {
             .subscribe({
                 when(it) {
                     is RoomEvent.ConnectedEvent -> {
-                        Toast.makeText(requireActivity(), "Connected to ${it.room.name}.", Toast.LENGTH_LONG).show()
-                        fragment_screen_view_title.text = getString(R.string.fragment_screen_view_connected, it.room.name, it.room.remoteParticipants.firstOrNull()?.identity)
-                        fragment_screen_view_progress.visibility = View.GONE
+                        Toast.makeText(requireActivity(), "Connected to ${it.room.name}. Waiting for participant to join.", Toast.LENGTH_LONG).show()
                     }
                     is RoomEvent.ReconnectedEvent -> {
-                        fragment_screen_view_title.text = getString(R.string.fragment_screen_view_connected, it.room.name, it.room.remoteParticipants.firstOrNull()?.identity)
+                        Toast.makeText(requireActivity(), "Connected to ${it.room.name}.", Toast.LENGTH_LONG).show()
                         fragment_screen_view_progress.visibility = View.GONE
                     }
                     is RoomEvent.ReconnectingEvent -> {
-                        fragment_screen_view_title.text = getString(R.string.fragment_screen_share_reconnecting, it.room.name)
+                        Toast.makeText(requireActivity(), "Reconnecting to room ${it.room.name}.", Toast.LENGTH_LONG).show()
                         fragment_screen_view_progress.visibility = View.VISIBLE
+                    }
+                    is RoomEvent.ParticipantConnectedEvent -> {
+                        Toast.makeText(requireActivity(), "Participant ${it.participant.identity} joined the room. Waiting for ${it.participant.identity} to share their screen", Toast.LENGTH_LONG).show()
+                        fragment_screen_view_progress.visibility = View.GONE
                     }
                     // TODO Add event for when participant leaves
                 }

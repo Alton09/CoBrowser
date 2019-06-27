@@ -13,6 +13,7 @@ import com.koushikdutta.ion.Ion
 import com.twilio.video.*
 import io.reactivex.subjects.BehaviorSubject
 import timber.log.Timber
+import java.nio.ByteBuffer
 
 class TwilioManager {
 
@@ -23,8 +24,6 @@ class TwilioManager {
     private lateinit var roomName: String
     private lateinit var accessToken: String
     private var localAudioTrack: LocalAudioTrack? = null
-    private var localVideoTrack: LocalVideoTrack? = null
-    private var participantVideoTrack: VideoTrack? = null
     private val sharedPreferences by lazy {
         PreferenceManager.getDefaultSharedPreferences(activity)
     }
@@ -68,10 +67,6 @@ class TwilioManager {
             }
         }
 
-    private val enableAutomaticSubscription: Boolean
-        get() {
-            return sharedPreferences.getBoolean("enable_automatic_subscription", true)
-        }
     private val encodingParameters: EncodingParameters
         get() {
             val maxAudioBitrate = Integer.parseInt(
@@ -96,7 +91,8 @@ class TwilioManager {
     private var participantIdentity: String? = null
     private var screenVideoTrack: LocalVideoTrack? = null
     private var screenCapturer: ScreenCapturer? = null
-    private var videoview: VideoView? = null
+    private var videoView: VideoView? = null
+    private var dataTrack: LocalDataTrack? = null
     private val roomListener = object : Room.Listener {
         override fun onConnected(room: Room) {
             Timber.i("onConnected")
@@ -120,20 +116,18 @@ class TwilioManager {
         override fun onConnectFailure(room: Room, e: TwilioException) {
             Timber.e(e, "onConnectionFailure")
             configureAudio(false)
-            Toast.makeText(activity, "Failed to connect to room: ${room.name}", Toast.LENGTH_LONG).show()
             shutDown(true)
         }
 
         override fun onDisconnected(room: Room, e: TwilioException?) {
             Timber.e(e, "onDisconnected")
-            // TODO needed for ScreenShareFragment
-//            moveLocalVideoToPrimaryView()
             configureAudio(false)
             shutDown(true)
         }
 
         override fun onParticipantConnected(room: Room, participant: RemoteParticipant) {
             Timber.i("onParticipantConnected")
+            roomEvents.onNext(RoomEvent.ParticipantConnectedEvent(participant))
             addRemoteParticipant(participant)
         }
 
@@ -168,6 +162,143 @@ class TwilioManager {
         }
 
     }
+    private val dataTrackListener = object : RemoteDataTrack.Listener {
+        override fun onMessage(remoteDataTrack: RemoteDataTrack, messageBuffer: ByteBuffer) {
+            // TODO implement drawing logic
+        }
+
+        override fun onMessage(remoteDataTrack: RemoteDataTrack, message: String) {
+            // TODO implement drawing logic
+        }
+
+    }
+    private val participantListener = object : RemoteParticipant.Listener {
+        override fun onDataTrackPublished(
+            remoteParticipant: RemoteParticipant,
+            remoteDataTrackPublication: RemoteDataTrackPublication
+        ) {
+        }
+
+        override fun onAudioTrackEnabled(
+            remoteParticipant: RemoteParticipant,
+            remoteAudioTrackPublication: RemoteAudioTrackPublication
+        ) {
+        }
+
+        override fun onAudioTrackPublished(
+            remoteParticipant: RemoteParticipant,
+            remoteAudioTrackPublication: RemoteAudioTrackPublication
+        ) {
+        }
+
+        override fun onVideoTrackPublished(
+            remoteParticipant: RemoteParticipant,
+            remoteVideoTrackPublication: RemoteVideoTrackPublication
+        ) {
+        }
+
+        override fun onVideoTrackSubscribed(
+            remoteParticipant: RemoteParticipant,
+            remoteVideoTrackPublication: RemoteVideoTrackPublication,
+            remoteVideoTrack: RemoteVideoTrack
+        ) {
+            addRemoteParticipantVideo(remoteVideoTrack)
+        }
+
+        override fun onVideoTrackUnsubscribed(
+            remoteParticipant: RemoteParticipant,
+            remoteVideoTrackPublication: RemoteVideoTrackPublication,
+            remoteVideoTrack: RemoteVideoTrack
+        ) {
+            removeParticipantVideo(remoteVideoTrack)
+        }
+
+        override fun onVideoTrackEnabled(
+            remoteParticipant: RemoteParticipant,
+            remoteVideoTrackPublication: RemoteVideoTrackPublication
+        ) {
+        }
+
+        override fun onVideoTrackDisabled(
+            remoteParticipant: RemoteParticipant,
+            remoteVideoTrackPublication: RemoteVideoTrackPublication
+        ) {
+        }
+
+        override fun onDataTrackSubscriptionFailed(
+            remoteParticipant: RemoteParticipant,
+            remoteDataTrackPublication: RemoteDataTrackPublication,
+            twilioException: TwilioException
+        ) {
+        }
+
+        override fun onAudioTrackDisabled(
+            remoteParticipant: RemoteParticipant,
+            remoteAudioTrackPublication: RemoteAudioTrackPublication
+        ) {
+        }
+
+        override fun onDataTrackSubscribed(
+            remoteParticipant: RemoteParticipant,
+            remoteDataTrackPublication: RemoteDataTrackPublication,
+            remoteDataTrack: RemoteDataTrack
+        ) {
+        }
+
+        override fun onAudioTrackUnsubscribed(
+            remoteParticipant: RemoteParticipant,
+            remoteAudioTrackPublication: RemoteAudioTrackPublication,
+            remoteAudioTrack: RemoteAudioTrack
+        ) {
+        }
+
+        override fun onAudioTrackSubscribed(
+            remoteParticipant: RemoteParticipant,
+            remoteAudioTrackPublication: RemoteAudioTrackPublication,
+            remoteAudioTrack: RemoteAudioTrack
+        ) {
+        }
+
+        override fun onVideoTrackSubscriptionFailed(
+            remoteParticipant: RemoteParticipant,
+            remoteVideoTrackPublication: RemoteVideoTrackPublication,
+            twilioException: TwilioException
+        ) {
+        }
+
+        override fun onAudioTrackSubscriptionFailed(
+            remoteParticipant: RemoteParticipant,
+            remoteAudioTrackPublication: RemoteAudioTrackPublication,
+            twilioException: TwilioException
+        ) {
+        }
+
+        override fun onAudioTrackUnpublished(
+            remoteParticipant: RemoteParticipant,
+            remoteAudioTrackPublication: RemoteAudioTrackPublication
+        ) {
+        }
+
+        override fun onVideoTrackUnpublished(
+            remoteParticipant: RemoteParticipant,
+            remoteVideoTrackPublication: RemoteVideoTrackPublication
+        ) {
+        }
+
+        override fun onDataTrackUnsubscribed(
+            remoteParticipant: RemoteParticipant,
+            remoteDataTrackPublication: RemoteDataTrackPublication,
+            remoteDataTrack: RemoteDataTrack
+        ) {
+        }
+
+        override fun onDataTrackUnpublished(
+            remoteParticipant: RemoteParticipant,
+            remoteDataTrackPublication: RemoteDataTrackPublication
+        ) {
+        }
+
+    }
 
     fun screenShareInit(activity: AppCompatActivity, username: String, roomName: String, mediaProjectionIntent: Intent, mediaProjectionResultCode: Int) {
         this.activity = activity
@@ -177,7 +308,8 @@ class TwilioManager {
     }
 
     fun screenViewInit(activity: AppCompatActivity, username: String, roomName: String, videoView: VideoView) {
-        this.videoview = videoView
+        this.videoView = videoView
+        dataTrack = LocalDataTrack.create(activity)
         init(activity, username, roomName)
     }
 
@@ -213,11 +345,16 @@ class TwilioManager {
         }
     }
 
+    fun sendScreenPosition(motionMessage: MotionMessage) {
+        dataTrack?.send(motionMessage.toJsonString())
+    }
+
     fun shutDown(popFragment: Boolean = false) {
         stopScreenCapture()
         room?.disconnect()
         localAudioTrack?.release()
-        localVideoTrack?.release()
+        screenVideoTrack?.release()
+        dataTrack?.release()
         if(popFragment) activity.supportFragmentManager.popBackStack()
     }
 
@@ -227,11 +364,12 @@ class TwilioManager {
             .roomName(roomName)
 
         localAudioTrack?.let { connectOptionsBuilder.audioTracks(listOf(it)) }
-        localVideoTrack?.let { connectOptionsBuilder.videoTracks(listOf(it)) }
+        screenVideoTrack?.let { connectOptionsBuilder.videoTracks(listOf(it)) }
+        dataTrack?.let { connectOptionsBuilder.dataTracks(listOf(it)) }
         connectOptionsBuilder.preferAudioCodecs(listOf(audioCodec))
         connectOptionsBuilder.preferVideoCodecs(listOf(videoCodec))
         connectOptionsBuilder.encodingParameters(encodingParameters)
-        connectOptionsBuilder.enableAutomaticSubscription(enableAutomaticSubscription)
+        connectOptionsBuilder.enableAutomaticSubscription(true)
 
         room = Video.connect(activity, connectOptionsBuilder.build(), roomListener)
     }
@@ -274,20 +412,31 @@ class TwilioManager {
 
     private fun addRemoteParticipant(remoteParticipant: RemoteParticipant) {
         participantIdentity = remoteParticipant.identity
-        Toast.makeText(activity, "Participant $participantIdentity joined", Toast.LENGTH_LONG).show()
+        remoteParticipant.setListener(participantListener)
+        if(dataTrack == null) {
+            remoteParticipant.remoteDataTracks.firstOrNull()?.remoteDataTrack?.setListener(dataTrackListener)
+        }
+    }
 
-        videoview?.let {
-            remoteParticipant.remoteVideoTracks.firstOrNull()?.remoteVideoTrack?.addRenderer(it)
+    private fun addRemoteParticipantVideo(videoTrack: VideoTrack) {
+        videoView?.let {
+            it.mirror = false
+            videoTrack.addRenderer(it)
+        }
+    }
+
+    private fun removeParticipantVideo(videoTrack: VideoTrack) {
+        videoView?.let {
+            videoTrack.removeRenderer(it)
         }
     }
 
     private fun removeRemoteParticipant(remoteParticipant: RemoteParticipant) {
-        Toast.makeText(activity, "Participant: ${remoteParticipant.identity} left.", Toast.LENGTH_LONG).show()
         if (remoteParticipant.identity != participantIdentity) {
             return
         }
 
-        videoview?.let {
+        videoView?.let {
             remoteParticipant.remoteVideoTracks.firstOrNull()?.remoteVideoTrack?.removeRenderer(it)
         }
     }
