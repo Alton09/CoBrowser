@@ -49,7 +49,6 @@ class ScreenShareFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (requireActivity() as AppCompatActivity).setSupportActionBar(fragment_screen_share_toolbar)
-        (requireActivity() as OverlayView).displayOverlayView()
         setupFabClickListeners()
         dataTrackDisposable = subscribeToDataTrackEvents()
     }
@@ -75,6 +74,7 @@ class ScreenShareFragment : Fragment() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == MEDIA_PROJECTION_REQUEST) {
             if (resultCode == Activity.RESULT_OK) {
+                (requireActivity() as OverlayView).displayOverlayView()
                 arguments!!.apply {
                     twilioManager.screenShareInit(
                         requireActivity() as AppCompatActivity,
