@@ -93,6 +93,7 @@ class TwilioManager {
     private var screenCapturer: ScreenCapturer? = null
     private var videoView: VideoView? = null
     private var dataTrack: LocalDataTrack? = null
+    // TODO Move huge listeners to other classes
     private val roomListener = object : Room.Listener {
         override fun onConnected(room: Room) {
             Timber.i("onConnected")
@@ -159,16 +160,6 @@ class TwilioManager {
 
         override fun onScreenCaptureError(errorDescription: String) {
             Timber.d("onScreenCaptureError - error description = $errorDescription")
-        }
-
-    }
-    private val dataTrackListener = object : RemoteDataTrack.Listener {
-        override fun onMessage(remoteDataTrack: RemoteDataTrack, messageBuffer: ByteBuffer) {
-            // TODO implement drawing logic
-        }
-
-        override fun onMessage(remoteDataTrack: RemoteDataTrack, message: String) {
-            // TODO implement drawing logic
         }
 
     }
@@ -243,6 +234,7 @@ class TwilioManager {
             remoteDataTrackPublication: RemoteDataTrackPublication,
             remoteDataTrack: RemoteDataTrack
         ) {
+            addRemoteDataTrack(remoteDataTrack)
         }
 
         override fun onAudioTrackUnsubscribed(
@@ -299,10 +291,29 @@ class TwilioManager {
         }
 
     }
+    private val dataTrackListener = object : RemoteDataTrack.Listener {
+        override fun onMessage(remoteDataTrack: RemoteDataTrack, messageBuffer: ByteBuffer) {
 
-    fun screenShareInit(activity: AppCompatActivity, username: String, roomName: String, mediaProjectionIntent: Intent, mediaProjectionResultCode: Int) {
+        }
+
+        override fun onMessage(remoteDataTrack: RemoteDataTrack, message: String) {
+            MotionMessage.fromJson(message)?.let {
+                Toast.makeText(activity, "Received tocuh event x = ${it.coordinates.first} y = ${it.coordinates.second}}", Toast.LENGTH_LONG).show()
+            }
+        }
+
+    }
+
+    fun screenShareInit(
+        activity: AppCompatActivity,
+        username: String,
+        roomName: String,
+        mediaProjectionIntent: Intent,
+        mediaProjectionResultCode: Int
+    ) {
         this.activity = activity
-        screenCapturer = ScreenCapturer(activity, mediaProjectionResultCode, mediaProjectionIntent, screenCaptureListener)
+        screenCapturer =
+            ScreenCapturer(activity, mediaProjectionResultCode, mediaProjectionIntent, screenCaptureListener)
         startScreenCapture()
         init(activity, username, roomName)
     }
@@ -339,7 +350,7 @@ class TwilioManager {
     }
 
     fun stopScreenCapture() {
-        screenVideoTrack?.apply{
+        screenVideoTrack?.apply {
             release()
             screenVideoTrack = null
         }
@@ -355,7 +366,7 @@ class TwilioManager {
         localAudioTrack?.release()
         screenVideoTrack?.release()
         dataTrack?.release()
-        if(popFragment) activity.supportFragmentManager.popBackStack()
+        if (popFragment) activity.supportFragmentManager.popBackStack()
     }
 
     private fun connectToRoom(roomName: String) {
@@ -413,9 +424,6 @@ class TwilioManager {
     private fun addRemoteParticipant(remoteParticipant: RemoteParticipant) {
         participantIdentity = remoteParticipant.identity
         remoteParticipant.setListener(participantListener)
-        if(dataTrack == null) {
-            remoteParticipant.remoteDataTracks.firstOrNull()?.remoteDataTrack?.setListener(dataTrackListener)
-        }
     }
 
     private fun addRemoteParticipantVideo(videoTrack: VideoTrack) {
@@ -441,12 +449,17 @@ class TwilioManager {
         }
     }
 
+    private fun addRemoteDataTrack(remoteDataTrack: RemoteDataTrack?) {
+        remoteDataTrack?.setListener(dataTrackListener)
+    }
+
     // TODO Replace Ion with Retrofit and move to a network layer class
     private fun retrieveAccessTokenfromServer() {
         Ion.with(activity)
             .load("${BuildConfig.TWILIO_ACCESS_TOKEN_SERVER}?identity=${username}")
             .asString()
             .setCallback { e, token ->
+                // TODO Failure to get token kills fragment with no message
                 if (e == null) {
                     Timber.i("accessToken = $token")
                     this@TwilioManager.accessToken = token

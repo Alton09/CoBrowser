@@ -8,7 +8,6 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import com.twilio.video.Room
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.fragment_screen_view.*
@@ -35,7 +34,15 @@ class ScreenViewFragment : Fragment() {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_screen_view, container, false)
+        val view = inflater.inflate(R.layout.fragment_screen_view, container, false)
+        view.setOnTouchListener { view, event ->
+            if(event.action == MotionEvent.ACTION_DOWN) {
+                Timber.d("Press event! x = ${event.rawX} y = ${event.rawY}")
+                twilioManager.sendScreenPosition(MotionMessage(true, event.rawX, event.rawY))
+            }
+            true
+        }
+        return view
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
