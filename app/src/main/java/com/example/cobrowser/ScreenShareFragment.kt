@@ -8,9 +8,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import io.reactivex.disposables.CompositeDisposable
+import com.example.cobrowser.twilio.TwilioManager
 import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.fragment_screen_share.*
 import org.koin.android.ext.android.inject
@@ -50,22 +51,13 @@ class ScreenShareFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         (requireActivity() as AppCompatActivity).setSupportActionBar(fragment_screen_share_toolbar)
         setupFabClickListeners()
-        dataTrackDisposable = subscribeToDataTrackEvents()
-    }
-
-    override fun onResume() {
-        super.onResume()
-
         roomEventDisposable = subscribeToRoomEvents()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        roomEventDisposable?.dispose()
+        dataTrackDisposable = subscribeToDataTrackEvents()
     }
 
     override fun onDestroy() {
         twilioManager.shutDown()
+        roomEventDisposable?.dispose()
         dataTrackDisposable?.dispose()
         super.onDestroy()
     }
@@ -85,16 +77,13 @@ class ScreenShareFragment : Fragment() {
                     )
                 }
             } else {
-                // TODO Present error message
-                requireActivity().supportFragmentManager.popBackStack()
+                // TODO Present dialog error message
+                popBackStack()
             }
         }
     }
 
     private fun setupFabClickListeners() {
-        fragment_screen_share_cast_fab.setOnClickListener {
-            // TODO toggle screen capture
-        }
         fragment_screen_share_end_call_fab.setOnClickListener {
             twilioManager.shutDown(true)
             (requireActivity() as OverlayView).removeOverlayView()
@@ -137,6 +126,16 @@ class ScreenShareFragment : Fragment() {
                         fragment_screen_share_title.text =
                             getString(R.string.fragment_screen_share_reconnecting, it.room.name)
                         fragment_screen_share_progress.visibility = View.VISIBLE
+                    }
+                    is RoomEvent.ParticipantConnectedEvent -> {
+                        Toast.makeText(requireActivity(), "Participant ${it.participant.identity} joined the room.", Toast.LENGTH_LONG).show()
+//                        NotificationCompat.Builder(requireActivity(), "Participant Channel")
+                    }
+                    is RoomEvent.ParticipantDisconnectedEvent -> {
+                        Toast.makeText(requireActivity(), "Participant ${it.participant.identity} left the room.", Toast.LENGTH_LONG).show()
+                    }
+                    is RoomEvent.ExitRoom -> {
+                        popBackStack()
                     }
                 }
             }, {

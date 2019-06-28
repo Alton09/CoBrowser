@@ -1,4 +1,4 @@
-package com.example.cobrowser
+package com.example.cobrowser.twilio
 
 import android.content.Context
 import android.content.Intent
@@ -7,19 +7,21 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.os.Build
 import android.preference.PreferenceManager
+import android.util.Pair
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.cobrowser.BuildConfig
+import com.example.cobrowser.R
+import com.example.cobrowser.RoomEvent
 import com.koushikdutta.ion.Ion
 import com.twilio.video.*
-import io.reactivex.subjects.BehaviorSubject
+import io.reactivex.subjects.PublishSubject
 import timber.log.Timber
 import java.nio.ByteBuffer
-import android.util.Pair
-import io.reactivex.subjects.PublishSubject
 
 class TwilioManager {
 
-    private val roomEvents = BehaviorSubject.create<RoomEvent>()
+    private val roomEvents = PublishSubject.create<RoomEvent>()
     val roomEventsObserver = roomEvents.hide()
     private val dataTrackEvents = PublishSubject.create<Pair<Float, Float>>()
     val dataTrackEventsObserver = dataTrackEvents.hide()
@@ -32,6 +34,7 @@ class TwilioManager {
         PreferenceManager.getDefaultSharedPreferences(activity)
     }
     private val audioManager by lazy {
+        // TODO Move to constructor
         this@TwilioManager.activity.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     }
     private val audioCodec: AudioCodec
@@ -138,6 +141,7 @@ class TwilioManager {
 
         override fun onParticipantDisconnected(room: Room, participant: RemoteParticipant) {
             Timber.i("onParticipantDisconnected")
+            roomEvents.onNext(RoomEvent.ParticipantDisconnectedEvent(participant))
             removeRemoteParticipant(participant)
         }
 
@@ -371,7 +375,7 @@ class TwilioManager {
         localAudioTrack?.release()
         screenVideoTrack?.release()
         dataTrack?.release()
-        if (popFragment) activity.supportFragmentManager.popBackStack()
+        if (popFragment) roomEvents.onNext(RoomEvent.ExitRoom())
     }
 
     private fun connectToRoom(roomName: String) {

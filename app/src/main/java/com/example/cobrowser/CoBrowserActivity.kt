@@ -89,3 +89,7 @@ class CoBrowserActivity : AppCompatActivity(), OverlayView {
         }
     }
 }
+
+fun Fragment.popBackStack() {
+    requireActivity().supportFragmentManager.popBackStack()
+}

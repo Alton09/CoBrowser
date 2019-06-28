@@ -34,6 +34,10 @@ class WaitingRoomFragment : Fragment() {
         val username = arguments!!.getString(USERNAME_ARG_KEY)
         fragment_waitingroom_title.text = getString(R.string.fragment_waitingroom_body_text, username)
 
+        setupListeners()
+    }
+
+    private fun setupListeners() {
         fragment_waitingroom_share_button.setOnClickListener {
             requestPermissions(
                 arrayOf(Manifest.permission.RECORD_AUDIO),

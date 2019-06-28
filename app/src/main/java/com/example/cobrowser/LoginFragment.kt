@@ -19,10 +19,10 @@ class LoginFragment : Fragment() {
     override fun onResume() {
         super.onResume()
 
-        submit()
+        setupSubmitListener()
     }
 
-    private fun submit() {
+    private fun setupSubmitListener() {
         fragment_login_submit_button.setOnClickListener {
             val input = fragment_login_username_input.text.toString()
             fragment_login_username_input_layout.apply {
