@@ -22,4 +22,4 @@ To ensure the access tokens are retrieved correctly, make sure to use ngrok to s
 Similar to how to setup token retrieval configuration for the    [quickstartKotlin](https://github.com/twilio/video-quickstart-android/tree/master/quickstartKotlin) example project.
 
 ## Build & Run
-Simply open this project in AndroidStudio and run the app module run configuration to deploy the apk on two Android devices. There are no special build types or flavors, just select the debug build type. **NOTE**: After logging into the app, select "Share Screen" on one device and "Join Screen" on the other. As mentioned in the known issues section above, both devices should not select the same option.
+Simply open this project in AndroidStudio (open project build.gradle) and run the app module run configuration to deploy the apk on two Android devices. There are no special build types or flavors, just select the debug build type. **NOTE**: After logging into the app, select "Share Screen" on one device and "Join Screen" on the other. As mentioned in the known issues section above, both devices should not select the same option.
