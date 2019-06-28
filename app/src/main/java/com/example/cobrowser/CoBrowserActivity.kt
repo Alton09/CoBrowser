@@ -59,7 +59,9 @@ class CoBrowserActivity : AppCompatActivity(), OverlayView {
     }
 
     override fun removeOverlayView() {
-        windowManager().removeView(overlayView)
+        overlayView?.let {
+            windowManager().removeView(it)
+        }
     }
 
     private fun getLayoutType() =

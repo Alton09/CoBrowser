@@ -1,10 +1,14 @@
 package com.example.cobrowser
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.media.projection.MediaProjectionManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,17 +22,17 @@ import org.koin.android.ext.android.inject
 import timber.log.Timber
 
 class ScreenShareFragment : Fragment() {
-
     // TODO Create ViewModel to manage view state and TwilioManager
     val twilioManager by inject<TwilioManager>()
     private var roomEventDisposable: Disposable? = null
+
     private var dataTrackDisposable: Disposable? = null
 
     companion object {
         const val USERNAME_ARG_KEY = "USERNAME_ARG_KEY"
         const val ROOM_NAME_ARG_KEY = "ROOM_NAME_ARG_KEY"
         const val MEDIA_PROJECTION_REQUEST = 100
-
+        const val ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE = 101
         fun newInstance(username: String, roomName: String): ScreenShareFragment {
             val bundle = Bundle().apply {
                 putString(USERNAME_ARG_KEY, username)
@@ -36,11 +40,12 @@ class ScreenShareFragment : Fragment() {
             }
             return ScreenShareFragment().apply { arguments = bundle }
         }
+
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        requestScreenCapturePermission()
+        requestScreenCapturePermissions()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -62,11 +67,12 @@ class ScreenShareFragment : Fragment() {
         super.onDestroy()
     }
 
+    @SuppressLint("NewApi")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == MEDIA_PROJECTION_REQUEST) {
-            if (resultCode == Activity.RESULT_OK) {
-                (requireActivity() as OverlayView).displayOverlayView()
+        if (resultCode == Activity.RESULT_OK) {
+            if (requestCode == MEDIA_PROJECTION_REQUEST) {
+                displayOverlayView()
                 arguments!!.apply {
                     twilioManager.screenShareInit(
                         requireActivity() as AppCompatActivity,
@@ -76,10 +82,27 @@ class ScreenShareFragment : Fragment() {
                         resultCode
                     )
                 }
-            } else {
-                // TODO Present dialog error message
-                popBackStack()
             }
+        } else if(requestCode != ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE && resultCode == Activity.RESULT_CANCELED){
+            // TODO Present dialog error message
+            twilioManager.shutDown(true)
+        }
+
+    }
+
+    private fun displayOverlayView() {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (Settings.canDrawOverlays(requireActivity())) {
+                (requireActivity() as OverlayView).displayOverlayView()
+            } else {
+                Toast.makeText(
+                    requireActivity(),
+                    "Overlay permission was not allowed, participant taps will not be displayed.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        } else {
+            (requireActivity() as OverlayView).displayOverlayView()
         }
     }
 
@@ -98,13 +121,21 @@ class ScreenShareFragment : Fragment() {
         }
     }
 
-    private fun requestScreenCapturePermission() {
+    private fun requestScreenCapturePermissions() {
         val mediaProjectionManager =
             requireActivity().getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
         startActivityForResult(
             mediaProjectionManager.createScreenCaptureIntent(),
             MEDIA_PROJECTION_REQUEST
         )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(requireActivity())) {
+            val intent = Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:" + requireActivity().packageName)
+            )
+            startActivityForResult(intent, ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE)
+        }
+
     }
 
     private fun subscribeToRoomEvents(): Disposable =
@@ -128,11 +159,18 @@ class ScreenShareFragment : Fragment() {
                         fragment_screen_share_progress.visibility = View.VISIBLE
                     }
                     is RoomEvent.ParticipantConnectedEvent -> {
-                        Toast.makeText(requireActivity(), "Participant ${it.participant.identity} joined the room.", Toast.LENGTH_LONG).show()
-//                        NotificationCompat.Builder(requireActivity(), "Participant Channel")
+                        Toast.makeText(
+                            requireActivity(),
+                            "Participant ${it.participant.identity} joined the room.",
+                            Toast.LENGTH_LONG
+                        ).show()
                     }
                     is RoomEvent.ParticipantDisconnectedEvent -> {
-                        Toast.makeText(requireActivity(), "Participant ${it.participant.identity} left the room.", Toast.LENGTH_LONG).show()
+                        Toast.makeText(
+                            requireActivity(),
+                            "Participant ${it.participant.identity} left the room.",
+                            Toast.LENGTH_LONG
+                        ).show()
                     }
                     is RoomEvent.ExitRoom -> {
                         popBackStack()
