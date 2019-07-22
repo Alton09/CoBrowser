@@ -22,6 +22,7 @@ class LoginFragment : Fragment() {
         setupSubmitListener()
     }
 
+    // TODO Validation should be moved to a ViewModel
     private fun setupSubmitListener() {
         fragment_login_submit_button.setOnClickListener {
             val input = fragment_login_username_input.text.toString()

@@ -31,6 +31,7 @@ class WaitingRoomFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // TODO force unwrap is unnecessary here. Could use a default username instead.
         val username = arguments!!.getString(USERNAME_ARG_KEY)
         fragment_waitingroom_title.text = getString(R.string.fragment_waitingroom_body_text, username)
 
@@ -52,6 +53,7 @@ class WaitingRoomFragment : Fragment() {
         }
     }
 
+    // TODO Permission logic could be moved to another class for easier unit testing.
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         val permissionGranted = grantResults.all { it == PackageManager.PERMISSION_GRANTED }
         if (requestCode == SHARE_SCREEN_REQUEST_CODE) {
@@ -101,6 +103,7 @@ class WaitingRoomFragment : Fragment() {
         return this
     }
 
+    // TODO validation logic could be grouped together with login screen. Or Decorator pattern could be used to reuse validation.
     private fun validateInput(dialog: AlertDialog, showFragmentAction: (username: String, roomName: String) ->  Unit) {
         val input = dialog.dialog_room_input.text.toString()
         dialog.dialog_room_input_layout.apply {
@@ -108,7 +111,7 @@ class WaitingRoomFragment : Fragment() {
                 error = "Room name is required"
             } else {
                 error = ""
-                showFragmentAction(arguments!!.getString(USERNAME_ARG_KEY)!!, input)
+                showFragmentAction(arguments!!.getString(USERNAME_ARG_KEY)!!, input) // TODO should store username in ViewModel
                 dialog.dismiss()
             }
         }

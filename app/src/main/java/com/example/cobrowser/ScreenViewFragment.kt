@@ -39,6 +39,7 @@ class ScreenViewFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_screen_view, container, false)
         view.setOnTouchListener { view, event ->
+            // TODO Figure out how to make touch events more accurate by using dp instead of pixels.
             if(event.action == MotionEvent.ACTION_DOWN) {
                 Timber.d("Press event! x = ${event.x} y = ${event.y}")
                 twilioManager.sendScreenPosition(MotionMessage(true, event.x, event.y))
